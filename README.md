@@ -1,18 +1,12 @@
 # CNPG-I Hello World Plugin
 
-A [CNPG-I](https://github.com/cloudnative-pg/cnpg-i) plugin to add
-user-defined labels, annotations and a specific `pause` sidecar
-to the pods of
+A [CNPG-I](https://github.com/cloudnative-pg/cnpg-i) plugin that resets
+PostgreSQL cluster state when downgrading to a lower version for
 [CloudNativePG](https://github.com/cloudnative-pg/cloudnative-pg/) clusters.
 
-This project serves as an introductory guide to bootstrapping
-a [CNPG-I](https://github.com/cloudnative-pg/cnpg-i) plugin and leveraging
-lifecycle hooks within a development environment. While similar results can be
-achieved through simpler methods such as mutating webhooks or CNPG's built-in
-features, this project is specifically designed to familiarize developers with
-the plugin workflow. By understanding how lifecycle hooks interact with other
-interfaces, developers can gain a deeper insight into implementing complex
-resource changes in real-world applications.
+This plugin detects version downgrades (e.g., PG 17 to PG 16) and removes
+initialization markers and cluster state files to force the cluster to
+behave as if it's starting for the first time, enabling clean downgrades.
 
 This plugin uses
 the [pluginhelper](https://github.com/cloudnative-pg/cnpg-i-machinery/tree/main/pkg/pluginhelper)

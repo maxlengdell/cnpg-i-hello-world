@@ -3,58 +3,78 @@ package operator
 import (
 	"context"
 
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper/common"
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper/decoder"
-	"github.com/cloudnative-pg/cnpg-i-machinery/pkg/pluginhelper/object"
 	"github.com/cloudnative-pg/cnpg-i/pkg/operator"
-
-	"github.com/cloudnative-pg/cnpg-i-hello-world/internal/config"
-	"github.com/cloudnative-pg/cnpg-i-hello-world/pkg/metadata"
+	"github.com/cloudnative-pg/machinery/pkg/log"
 )
 
-// MutateCluster is called to mutate a cluster with the defaulting webhook.
-// This function is defaulting the "imagePullPolicy" plugin parameter
+// Implementation implements the operator service
+type Implementation struct {
+	operator.OperatorServer
+}
+
+// GetCapabilities gets the capabilities of this operator lifecycle hook
+func (Implementation) GetCapabilities(
+	context.Context,
+	*operator.OperatorCapabilitiesRequest,
+) (*operator.OperatorCapabilitiesResult, error) {
+	return &operator.OperatorCapabilitiesResult{
+		Capabilities: []*operator.OperatorCapability{
+			{
+				Type: &operator.OperatorCapability_Rpc{
+					Rpc: &operator.OperatorCapability_RPC{
+						Type: operator.OperatorCapability_RPC_TYPE_VALIDATE_CLUSTER_CREATE,
+					},
+				},
+			},
+			{
+				Type: &operator.OperatorCapability_Rpc{
+					Rpc: &operator.OperatorCapability_RPC{
+						Type: operator.OperatorCapability_RPC_TYPE_VALIDATE_CLUSTER_CHANGE,
+					},
+				},
+			},
+			{
+				Type: &operator.OperatorCapability_Rpc{
+					Rpc: &operator.OperatorCapability_RPC{
+						Type: operator.OperatorCapability_RPC_TYPE_MUTATE_CLUSTER,
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+// ValidateClusterCreate validates cluster creation
+func (Implementation) ValidateClusterCreate(
+	ctx context.Context,
+	request *operator.OperatorValidateClusterCreateRequest,
+) (*operator.OperatorValidateClusterCreateResult, error) {
+	logger := log.FromContext(ctx).WithName("validate-cluster-create")
+	logger.Info("ValidateClusterCreate called")
+
+	return &operator.OperatorValidateClusterCreateResult{}, nil
+}
+
+// ValidateClusterChange validates cluster changes
+func (Implementation) ValidateClusterChange(
+	ctx context.Context,
+	request *operator.OperatorValidateClusterChangeRequest,
+) (*operator.OperatorValidateClusterChangeResult, error) {
+	logger := log.FromContext(ctx).WithName("validate-cluster-change")
+	logger.Info("ValidateClusterChange called")
+
+	return &operator.OperatorValidateClusterChangeResult{}, nil
+}
+
+// MutateCluster mutates cluster during admission
 func (Implementation) MutateCluster(
-	_ context.Context,
+	ctx context.Context,
 	request *operator.OperatorMutateClusterRequest,
 ) (*operator.OperatorMutateClusterResult, error) {
-	cluster, err := decoder.DecodeClusterLenient(request.GetDefinition())
-	if err != nil {
-		return nil, err
-	}
-
-	helper := common.NewPlugin(
-		*cluster,
-		metadata.PluginName,
-	)
-
-	config, valErrs := config.FromParameters(helper)
-	if len(valErrs) > 0 {
-		return nil, valErrs[0]
-	}
-
-	mutatedCluster := cluster.DeepCopy()
-	for i := range mutatedCluster.Spec.Plugins {
-		if mutatedCluster.Spec.Plugins[i].Name != metadata.PluginName {
-			continue
-		}
-
-		if mutatedCluster.Spec.Plugins[i].Parameters == nil {
-			mutatedCluster.Spec.Plugins[i].Parameters = make(map[string]string)
-		}
-
-		mutatedCluster.Spec.Plugins[i].Parameters, err = config.ToParameters()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	patch, err := object.CreatePatch(cluster, mutatedCluster)
-	if err != nil {
-		return nil, err
-	}
+	logger := log.FromContext(ctx).WithName("mutate-cluster")
+	logger.Info("MutateCluster called")
 
 	return &operator.OperatorMutateClusterResult{
-		JsonPatch: patch,
+		JsonPatch: []byte("[]"),
 	}, nil
 }

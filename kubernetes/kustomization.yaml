@@ -5,6 +5,7 @@ resources:
 - certificate-issuer.yaml
 - client-certificate.yaml
 - deployment.yaml
+- rbac.yaml
 - server-certificate.yaml
 - service.yaml
 images:

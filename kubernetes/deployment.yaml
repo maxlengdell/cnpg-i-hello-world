@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: hello-world
+    downgrade-plugin: "true"
   name: hello-world
 spec:
   replicas: 1
@@ -16,6 +17,7 @@ spec:
       labels:
         app: hello-world
     spec:
+      serviceAccountName: hello-world
       containers:
       - image: cnpg-i-hello-world:latest
         name: cnpg-i-hello-world
